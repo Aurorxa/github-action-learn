@@ -1,0 +1,65 @@
+name: CI # action 的名称
+
+on: # 什么时候触发 action
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  builds:
+    runs-on: ubuntu-latest
+    steps: # 步骤
+      - name: "拉取仓库代码"
+        uses: actions/checkout@v3
+      - name: "查看代码目录"
+        run: |
+          pwd && ls -lah  
+      - name: "设置 JDK 环境"
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: "输出 JDK 的版本"
+        run: java -version
+      - name: "登录到 DockerHub"
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: docker.io
+      - name: "安装 Maven 环境"
+        uses: stCarolas/setup-maven@v4.5
+        with:
+          maven-version: 3.8.2
+      - name: "输出 Maven 的版本"
+        run: mvn -v
+      - name: "设置 Maven 缓存"
+        uses: skjolber/maven-cache-github-action@v2.0
+        with:
+          step: restore
+      - name: "Maven 编译"
+        run: mvn clean install -Dmaven.test.skip=true --batch-mode --update-snapshots verify
+      - name: "保存 Maven 缓存"
+        uses: skjolber/maven-cache-github-action@v2.0
+        with:
+          step: save
+      - name: "安装 QEMU"
+        uses: docker/setup-qemu-action@v2.1.0
+      - name: "安装 Buildx"
+        uses: docker/setup-buildx-action@v2.5.0
+        with:
+          driver-opts: image=moby/buildkit:latest
+      - name: "构建镜像并推送镜像到 DockerHub 中"
+        uses: docker/build-push-action@v3
+        with:
+          tags: quay.io/${{ secrets.DOCKERHUB_USERNAME }}/github-action-learn:latest
+          platforms: linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/386, linux/ppc64le, linux/s390x
+          push: true
+#      - name: "构建镜像并推送镜像到 DockerHub 中"
+#        run: |
+#          pwd && ls -lah
+#          docker buildx build --push --platform linux/amd64,linux/ppc64le --tag ${{ secrets.DOCKERHUB_USERNAME }}/github-action-learn:${{github.sha}}:latest .
+
+
+
