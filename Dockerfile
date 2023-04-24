@@ -1,4 +1,4 @@
-FROM openjdk:11.0.16-slim
+FROM eclipse-temurin:17.0.6_10-jdk-focal
 WORKDIR /app
 COPY ./target/*.jar /app.jar
 # 修改时区

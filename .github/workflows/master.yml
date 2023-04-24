@@ -51,11 +51,11 @@ jobs:
         with:
           driver-opts: image=moby/buildkit:latest
       - name: "构建镜像并推送镜像到 DockerHub 中"
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           tags: quay.io/${{ secrets.DOCKERHUB_USERNAME }}/github-action-learn:latest
-          platforms: linux/amd64, linux/arm/v6, linux/arm/v7, linux/arm64/v8, linux/386, linux/ppc64le, linux/s390x
+          platforms: linux/amd64, linux/arm/v7, linux/arm64/v8
           push: true
 #      - name: "构建镜像并推送镜像到 DockerHub 中"
 #        run: |
